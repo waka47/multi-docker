@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install: 
+    - docker build -t waka47/react-test -f ./client/dockerfile.dev ./client
+
+script:
+    - docker run waka47/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t waka47/multi-client ./client
+    - docker build -t waka47/multi-nginx ./nginx
+    - docker build -t waka47/multi-server ./server
+    - docker build -t waka47/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password=stdin
+    # Take those images and push them to docker hub
+    - docker push waka47/multi-client
+    - docker push waka47/multi-nginx
+    - docker push waka47/multi-server
+    - docker push waka47/multi-worker
